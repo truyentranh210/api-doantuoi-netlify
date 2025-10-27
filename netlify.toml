@@ -1,3 +1,14 @@
 [build]
-  command = "npm install && npm start"
+  command = ""
   functions = "netlify/functions"
+
+# 🔁 Rút gọn URL API
+[[redirects]]
+  from = "/doantuoi"
+  to = "/.netlify/functions/doantuoi"
+  status = 200
+
+[[redirects]]
+  from = "/time"
+  to = "/.netlify/functions/time"
+  status = 200
