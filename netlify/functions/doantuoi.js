@@ -1,7 +1,7 @@
 const OpenAI = require("openai");
 
 const client = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY, // Đúng tên biến
+  apiKey: process.env.OPENAI_API_KEY,
 });
 
 exports.handler = async (event) => {
@@ -11,8 +11,10 @@ exports.handler = async (event) => {
   if (!url) {
     return {
       statusCode: 400,
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        error: "Thiếu tham số ?url=",
+        status: "error",
+        message: "Thiếu tham số ?url=",
         example: "/doantuoi?url=https://example.com/face.jpg"
       })
     };
@@ -25,21 +27,36 @@ exports.handler = async (event) => {
         {
           role: "user",
           content: [
-            { type: "text", text: "Đoán độ tuổi trung bình của người trong ảnh (chỉ trả về con số)." },
+            { type: "text", text: "Hãy đoán độ tuổi trung bình của người trong ảnh này (chỉ trả về số tuổi)." },
             { type: "image_url", image_url: url }
           ]
         }
       ]
     });
 
+    const ageGuess = completion.choices[0].message.content;
+
     return {
       statusCode: 200,
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        image: url,
-        predicted_age: completion.choices[0].message.content
-      })
+        status: "success",
+        message: "Đoán tuổi thành công!",
+        data: {
+          image: url,
+          predicted_age: ageGuess
+        }
+      }, null, 2)
     };
   } catch (err) {
-    return { statusCode: 500, body: JSON.stringify({ error: err.message }) };
+    return {
+      statusCode: 500,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        status: "error",
+        message: "Lỗi xử lý AI",
+        detail: err.message
+      })
+    };
   }
 };
