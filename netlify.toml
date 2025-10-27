@@ -2,7 +2,10 @@
   command = ""
   functions = "netlify/functions"
 
-# 🔁 Rút gọn URL
+[build.environment]
+  NODE_VERSION = "18"
+
+# 🔁 Redirect rút gọn URL
 [[redirects]]
   from = "/"
   to = "/.netlify/functions/home"
