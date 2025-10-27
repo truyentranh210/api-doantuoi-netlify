@@ -27,8 +27,8 @@ exports.handler = async (event) => {
         {
           role: "user",
           content: [
-            { type: "text", text: "Hãy đoán độ tuổi trung bình của người trong ảnh này (chỉ trả về số tuổi)." },
-            { type: "image_url", image_url: url }
+            { type: "text", text: "Hãy đoán độ tuổi trung bình của người trong ảnh này (chỉ trả về số tuổi, không giải thích)." },
+            { type: "image_url", image_url: { url } } // ✅ Đã fix cú pháp
           ]
         }
       ]
