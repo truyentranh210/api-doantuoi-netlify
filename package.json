@@ -1,13 +1,9 @@
 {
-  "name": "age-time-api",
+  "name": "api-doantuoi",
   "version": "1.0.0",
-  "main": "index.js",
   "type": "module",
   "dependencies": {
-    "express": "^4.19.2",
-    "node-fetch": "^3.3.2"
-  },
-  "scripts": {
-    "start": "node index.js"
+    "node-fetch": "^3.3.2",
+    "openai": "^4.67.1"
   }
 }
