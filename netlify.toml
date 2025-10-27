@@ -2,7 +2,17 @@
   command = ""
   functions = "netlify/functions"
 
-# 🔁 Rút gọn URL API
+# 🔁 Rút gọn URL
+[[redirects]]
+  from = "/"
+  to = "/.netlify/functions/home"
+  status = 200
+
+[[redirects]]
+  from = "/home"
+  to = "/.netlify/functions/home"
+  status = 200
+
 [[redirects]]
   from = "/doantuoi"
   to = "/.netlify/functions/doantuoi"
