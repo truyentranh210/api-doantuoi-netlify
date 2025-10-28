@@ -1,87 +1,68 @@
 const fetch = require("node-fetch");
 
 exports.handler = async (event) => {
+  const params = new URLSearchParams(event.rawQuery);
+  const country = params.get("country");
+
+  if (!country) {
+    return {
+      statusCode: 400,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        status: "error",
+        message: "Thiếu tham số ?country=",
+        example: "/time?country=vietnam"
+      })
+    };
+  }
+
   try {
-    const params = new URLSearchParams(event.rawQuery);
-    const country = params.get("country");
+    // 1️⃣ Lấy toàn bộ timezone từ API
+    const zoneResponse = await fetch("https://timeapi.io/api/TimeZone/AvailableTimeZones");
+    const zones = await zoneResponse.json();
 
-    // Nếu có tham số country => chỉ trả về 1 quốc gia
-    if (country) {
-      const response = await fetch(`https://timeapi.io/api/Time/current/country?country=${encodeURIComponent(country)}`);
-      if (!response.ok) {
-        return {
-          statusCode: 404,
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            status: "error",
-            message: `Không tìm thấy quốc gia: ${country}`
-          })
-        };
-      }
+    // 2️⃣ Tìm zone phù hợp với tên quốc gia (không phân biệt hoa/thường)
+    const match = zones.find(z => z.toLowerCase().includes(country.toLowerCase()));
 
-      const data = await response.json();
+    if (!match) {
       return {
-        statusCode: 200,
+        statusCode: 404,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          status: "success",
-          message: `Lấy thời gian quốc gia ${data.countryName} thành công!`,
-          data: {
-            country: data.countryName,
-            timezone: data.timeZone,
-            datetime: data.dateTime,
-            date: data.date,
-            time: data.time,
-            dayOfWeek: data.dayOfWeek
-          }
-        }, null, 2)
+          status: "error",
+          message: `Không tìm thấy quốc gia hoặc vùng: ${country}`
+        })
       };
     }
 
-    // Nếu KHÔNG có country => trả về danh sách toàn bộ múi giờ
-    const zoneListResp = await fetch("https://timeapi.io/api/TimeZone/AvailableTimeZones");
-    const zones = await zoneListResp.json();
+    // 3️⃣ Lấy thời gian của zone tìm được
+    const timeResp = await fetch(`https://timeapi.io/api/Time/current/zone?timeZone=${encodeURIComponent(match)}`);
+    const data = await timeResp.json();
 
-    // Lấy ngẫu nhiên 60 zone tiêu biểu để tránh timeout (Netlify giới hạn 10s)
-    const limitedZones = zones.slice(0, 60);
-
-    // Gọi đồng thời tất cả timezone
-    const promises = limitedZones.map(async (zone) => {
-      try {
-        const r = await fetch(`https://timeapi.io/api/Time/current/zone?timeZone=${zone}`);
-        const data = await r.json();
-        return {
-          timezone: zone,
-          datetime: data.dateTime,
-          date: data.date,
-          time: data.time,
-          dayOfWeek: data.dayOfWeek
-        };
-      } catch {
-        return null;
-      }
-    });
-
-    const results = (await Promise.all(promises)).filter(Boolean);
-
+    // 4️⃣ Trả kết quả JSON đẹp
     return {
       statusCode: 200,
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         status: "success",
-        message: "Lấy toàn bộ thời gian các quốc gia thành công!",
-        count: results.length,
-        data: results
+        message: `Lấy thời gian thành công cho quốc gia: ${country}`,
+        data: {
+          country,
+          timezone: match,
+          datetime: data.dateTime,
+          date: data.date,
+          time: data.time,
+          dayOfWeek: data.dayOfWeek
+        }
       }, null, 2)
     };
-
   } catch (err) {
     return {
       statusCode: 500,
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         status: "error",
-        message: "Lỗi khi lấy danh sách thời gian",
+        message: "Lỗi khi truy cập Time API",
         detail: err.message
       })
     };
